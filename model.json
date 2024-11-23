@@ -10,6 +10,6 @@
     "scheduler": "normal",
     "max_shift": 1.15,
     "base_shift": 0.50,
-    "width": 1024,
-    "height": 1024
+    "width": 832,
+    "height": 1216
 }
