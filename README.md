@@ -13,7 +13,7 @@ https://github.com/comfyanonymous/ComfyUI <br />
 https://blackforestlabs.ai/
 
 ### 🖼 Output
-
+<img width="1920" alt="Screenshot 2024-11-22 191339" src="https://github.com/user-attachments/assets/69c5ea6e-2ac8-4844-a6ed-bca599e43b16">
 
 ### 🏢 Sponsor
 [https://runpod.io](https://runpod.io?ref=iqi9iy8y)
