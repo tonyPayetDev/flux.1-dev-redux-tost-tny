@@ -1,0 +1,15 @@
+{
+    "input_image1": "https://files.catbox.moe/1ba4mh.png",
+    "input_image2": "https://files.catbox.moe/mkcchl.jpg",
+    "positive_prompt": "cute anime",
+    "negative_prompt": "blurry",
+    "seed": 0,
+    "steps": 20,
+    "guidance": 30,
+    "sampler_name": "euler",
+    "scheduler": "normal",
+    "max_shift": 1.15,
+    "base_shift": 0.50,
+    "width": 1024,
+    "height": 1024
+}
