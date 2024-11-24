@@ -1,7 +1,7 @@
 {
     "input_image1": "https://files.catbox.moe/jca2xm.jpg",
     "input_image2": "https://files.catbox.moe/mkcchl.jpg",
-    "positive_prompt": "cute anime",
+    "positive_prompt": "cute",
     "negative_prompt": "blurry",
     "seed": 0,
     "steps": 20,
@@ -10,6 +10,6 @@
     "scheduler": "normal",
     "max_shift": 1.15,
     "base_shift": 0.50,
-    "width": 832,
-    "height": 1216
+    "width": 1024,
+    "height": 1024
 }
