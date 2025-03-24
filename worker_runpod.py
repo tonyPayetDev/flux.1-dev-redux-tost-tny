@@ -69,26 +69,45 @@ def generate(input):
         random.seed(int(time.time()))
         seed = random.randint(0, 18446744073709551615)
     print(seed)
-
     image1 = LoadImage.load_image(input_image1)[0]
+    
     image2 = LoadImage.load_image(input_image2)[0]
     conditioning_positive = CLIPTextEncode.encode(clip, positive_prompt)[0]
     conditioning_positive = FluxGuidance.append(conditioning_positive, guidance)[0]
-    clip_vision_conditioning1 = CLIPVisionEncode.encode(clip_vision, image1, crop=None)[0]
-    style_vision_conditioning1 = StyleModelApply.apply_stylemodel(clip_vision_conditioning1, style_model, conditioning_positive, strength=0.5, strength_type="linear")[0]
-    clip_vision_conditioning2 = CLIPVisionEncode.encode(clip_vision, image2, crop=None)[0]
-    style_vision_conditioning2 = StyleModelApply.apply_stylemodel(clip_vision_conditioning2, style_model, conditioning_positive, strength=0.5, strength_type="linear")[0]
+    
+    # Vérification et extraction correcte des outputs de CLIPVisionEncode.encode()
+    clip_vision_conditioning1 = CLIPVisionEncode.encode(clip_vision, image1, crop=None)
+    if isinstance(clip_vision_conditioning1, list):
+        clip_vision_conditioning1 = clip_vision_conditioning1[0]
+    
+    clip_vision_conditioning2 = CLIPVisionEncode.encode(clip_vision, image2, crop=None)
+    if isinstance(clip_vision_conditioning2, list):
+        clip_vision_conditioning2 = clip_vision_conditioning2[0]
+    
+    # Application du modèle de style avec les valeurs corrigées
+    style_vision_conditioning1 = StyleModelApply.apply_stylemodel(
+        clip_vision_conditioning1, style_model, conditioning_positive, strength=0.5, strength_type="linear"
+    )[0]
+    
+    style_vision_conditioning2 = StyleModelApply.apply_stylemodel(
+        clip_vision_conditioning2, style_model, conditioning_positive, strength=0.5, strength_type="linear"
+    )[0]
+    
     unet_flux = ModelSamplingFlux.patch(unet, max_shift, base_shift, width, height)[0]
     noise = RandomNoise.get_noise(seed)[0]
     guider = BasicGuider.get_guider(unet_flux, style_vision_conditioning2)[0]
     sampler = KSamplerSelect.get_sampler(sampler_name)[0]
     sigmas = BasicScheduler.get_sigmas(unet_flux, scheduler, steps, 1.0)[0]
     latent_image = EmptyLatentImage.generate(width, height)[0]
+    
     samples, _ = SamplerCustomAdvanced.sample(noise, guider, sampler, sigmas, latent_image)
     decoded = VAEDecode.decode(vae, samples)[0].detach()
-    Image.fromarray(np.array(decoded*255, dtype=np.uint8)[0]).save(f"/content/flux.1-dev-redux-{seed}-tost.png")
-
+    
+    # Sauvegarde de l'image
+    Image.fromarray(np.array(decoded * 255, dtype=np.uint8)[0]).save(f"/content/flux.1-dev-redux-{seed}-tost.png")
+    
     result = f"/content/flux.1-dev-redux-{seed}-tost.png"
+
     # try:
     #     notify_uri = values['notify_uri']
     #     del values['notify_uri']
