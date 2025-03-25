@@ -69,22 +69,30 @@ def generate(input):
         random.seed(int(time.time()))
         seed = random.randint(0, 18446744073709551615)
     print(seed)
+   
+    # Chargement des images d'entrée
     image1 = LoadImage.load_image(input_image1)[0]
-    
     image2 = LoadImage.load_image(input_image2)[0]
+    
+    # Encodage du texte et application du guidage
     conditioning_positive = CLIPTextEncode.encode(clip, positive_prompt)[0]
     conditioning_positive = FluxGuidance.append(conditioning_positive, guidance)[0]
     
-    # Vérification et extraction correcte des outputs de CLIPVisionEncode.encode()
+    # Encodage des images avec CLIPVisionEncode
     clip_vision_conditioning1 = CLIPVisionEncode.encode(clip_vision, image1, crop=None)
-    if isinstance(clip_vision_conditioning1, list):
-        clip_vision_conditioning1 = clip_vision_conditioning1[0]
+    clip_vision_conditioning1 = clip_vision_conditioning1[0] if isinstance(clip_vision_conditioning1, list) else clip_vision_conditioning1
     
     clip_vision_conditioning2 = CLIPVisionEncode.encode(clip_vision, image2, crop=None)
-    if isinstance(clip_vision_conditioning2, list):
-        clip_vision_conditioning2 = clip_vision_conditioning2[0]
+    clip_vision_conditioning2 = clip_vision_conditioning2[0] if isinstance(clip_vision_conditioning2, list) else clip_vision_conditioning2
     
-    # Application du modèle de style avec les valeurs corrigées
+    # Vérification que les objets obtenus ont bien `last_hidden_state`
+    if not hasattr(clip_vision_conditioning1, "last_hidden_state"):
+        raise AttributeError(f"clip_vision_conditioning1 n'a pas 'last_hidden_state' : {type(clip_vision_conditioning1)}")
+    
+    if not hasattr(clip_vision_conditioning2, "last_hidden_state"):
+        raise AttributeError(f"clip_vision_conditioning2 n'a pas 'last_hidden_state' : {type(clip_vision_conditioning2)}")
+    
+    # Application du modèle de style avec la correction
     style_vision_conditioning1 = StyleModelApply.apply_stylemodel(
         clip_vision_conditioning1, style_model, conditioning_positive, strength=0.5, strength_type="linear"
     )[0]
@@ -93,21 +101,34 @@ def generate(input):
         clip_vision_conditioning2, style_model, conditioning_positive, strength=0.5, strength_type="linear"
     )[0]
     
+    # Patch du modèle UNet avec ModelSamplingFlux
     unet_flux = ModelSamplingFlux.patch(unet, max_shift, base_shift, width, height)[0]
+    
+    # Génération de bruit aléatoire
     noise = RandomNoise.get_noise(seed)[0]
+    
+    # Configuration du guideur
     guider = BasicGuider.get_guider(unet_flux, style_vision_conditioning2)[0]
+    
+    # Sélection du sampler
     sampler = KSamplerSelect.get_sampler(sampler_name)[0]
+    
+    # Obtention des sigmas du scheduler
     sigmas = BasicScheduler.get_sigmas(unet_flux, scheduler, steps, 1.0)[0]
+    
+    # Génération d'une image latente vide
     latent_image = EmptyLatentImage.generate(width, height)[0]
     
+    # Échantillonnage et génération de l'image finale
     samples, _ = SamplerCustomAdvanced.sample(noise, guider, sampler, sigmas, latent_image)
+    
+    # Décodage de l'image et sauvegarde
     decoded = VAEDecode.decode(vae, samples)[0].detach()
+    final_image = np.array(decoded * 255, dtype=np.uint8)[0]
+    Image.fromarray(final_image).save(f"/content/flux.1-dev-redux-{seed}-tost.png")
     
-    # Sauvegarde de l'image
-    Image.fromarray(np.array(decoded * 255, dtype=np.uint8)[0]).save(f"/content/flux.1-dev-redux-{seed}-tost.png")
-    
+    # Résultat final
     result = f"/content/flux.1-dev-redux-{seed}-tost.png"
-
     # try:
     #     notify_uri = values['notify_uri']
     #     del values['notify_uri']
