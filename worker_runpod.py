@@ -78,12 +78,15 @@ def generate(input):
     conditioning_positive = CLIPTextEncode.encode(clip, positive_prompt)[0]
     conditioning_positive = FluxGuidance.append(conditioning_positive, guidance)[0]
     
-    # Encodage des images avec CLIPVisionEncode
+     # Encodage des images avec CLIPVisionEncode
     clip_vision_conditioning1 = CLIPVisionEncode.encode(clip_vision, image1, crop=None)
-    clip_vision_conditioning1 = clip_vision_conditioning1[0] if isinstance(clip_vision_conditioning1, list) else clip_vision_conditioning1
+    if isinstance(clip_vision_conditioning1, (list, tuple)):
+        clip_vision_conditioning1 = clip_vision_conditioning1[0]  # Extraction correcte
     
     clip_vision_conditioning2 = CLIPVisionEncode.encode(clip_vision, image2, crop=None)
-    clip_vision_conditioning2 = clip_vision_conditioning2[0] if isinstance(clip_vision_conditioning2, list) else clip_vision_conditioning2
+    if isinstance(clip_vision_conditioning2, (list, tuple)):
+        clip_vision_conditioning2 = clip_vision_conditioning2[0]  # Extraction correcte
+
     
     # Vérification que les objets obtenus ont bien `last_hidden_state`
     if not hasattr(clip_vision_conditioning1, "last_hidden_state"):
